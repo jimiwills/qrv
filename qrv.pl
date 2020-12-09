@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Data::Dumper;
-use Text::Morse;
+#use Text::Morse; NO because it doesn't handle prosigns
 use Text::Levenshtein qw(distance);
 use Term::ReadKey;
 
@@ -24,7 +24,73 @@ my @choicekeys = qw/a s d f j k l ;/;
 my %choicekeys = map {$choicekeys[$_]=>$_} (0..$#choicekeys);
 
 
-my $morse = new Text::Morse;
+#my $morse = new Text::Morse;
+
+my %thecode = qw{
+	A .-	B -...	C -.-.	D -..	E .	F ..-.	G --.	H ....
+	I ..	J .---	K -.-	L .-..	M --	N -.	O ---	P .--.
+	Q --.-	R .-.	S ...	T -	U ..-	V ...-	W .--	X -..-
+	Y -.--	Z --..	0 -----	1 .----	2 ..---	3 ...--	4 ....-	5 .....
+	6 -....	7 --...	8 ---..	9 ----.	@ .--.-.	! ---. - -....-
+	, --..--	. .-.-.- / -..-.	? ..--..	( -.--.-	"  .-..-.
+	' .----.	[AS] .-...	[BT] -...-	[AR] .-.-.	[SK] ...-.-
+	[BK] -...-.-	[KN] -.--.	[KA] -.-.-	[CL] -.-..-..	[SN] ...-.
+	; -.-.-.
+};
+
+
+my @calls_i_know = qw{
+	MM0JTX
+	M6OGI
+	SF1Z
+	MM0DXC
+	GM2T
+	GM4UYZ
+	MM0INE
+};
+
+my @prosigns = grep '<', keys %thecode;
+
+my @qcodes = qw/
+	QRL	QRL?	QRV QRV?	QTH QTH?	QRT QRT?	QRM QRM?
+	QRN QRN?	QRO QRO?	QRP QRP?	QRQ QRQ?	QSL QSL?
+	QSO QSO?	QST	QRS QRS?	QRG QRG?	QRH QRH?
+	QRI QRI?	QRJ QRJ?	QRK QRK?	QRX QRX?	QRZ QRZ?
+	QSA QSA?	QSB QSB?	QSP QSP?	QSV QSV?	QSX QSX?
+	QSZ QSZ?	QSR QSR?
+/;
+
+my @abbrs = qw/
+	abt adr agn ant b4 c cfm cul es fb ga gb ge gg gm gn gnd
+	hi hihi hr hv hw hw? lid msg n nil nr nw ob om op ot pse
+	pwr rig rpt rx rcvr sed sez sri tmw tnx tt tu tvi tx ur 
+	urs wkd wkg wl wud wx xcvr xmtr xyl yl 73
+/;
+
+
+sub encode {
+	my ($text) = @_;
+	my @words = split /\s+/, uc $text;
+	my @codes = ();
+	foreach my $word(@words){
+		if($word =~ /^\[.*\]$/){
+			# it's a prosign... look up the whole thing
+			die "prosign '$word' not defined"
+				unless exists $thecode{$word};
+			push @codes, $thecode{$word};
+		}
+		else {
+			my @wordcodes = ();
+			foreach my $letter(split //, $word){
+				die "character '$letter' not defined"
+				unless exists $thecode{$letter};
+				push @wordcodes, $thecode{$letter};
+			}
+			push @codes, join(' ', @wordcodes);
+		}
+	}
+	return join(' / ', @codes);
+}
 
 sub cw {
 	my ($text,$wpm,$freq) = @_;
@@ -33,7 +99,8 @@ sub cw {
 
 sub hint {
 	return unless $hints;
-	print scalar($morse->Encode($_[0])),"\n";
+	#print scalar($morse->Encode($_[0])),"\n";
+	print encode($_[0]),"\n";
 }
 
 sub quit {
@@ -57,7 +124,8 @@ if(@data < $choosebetween){
 
 ### figure out the closest relatives of each text
 ### so the user needs to work harder to distinguish them!
-my %codes = map {$_ => $morse->Encode($_)} @data;
+#my %codes = map {$_ => $morse->Encode($_)} @data;
+my %codes = map {$_ => encode($_)} @data;
 
 my %nearest = ();
 my $maxchoiceindex = $choosebetween-1;
@@ -110,13 +178,6 @@ while(1){
 
 =cut
 
-QRL
-CQ
-DE
-ES
-?
-C
-/
 
 =cut
 
@@ -133,3 +194,4 @@ C
 /
 M6OGI
 MM0JTX
+[BK]
