@@ -3,7 +3,6 @@
 use strict;
 use warnings;
 use Data::Dumper;
-#use Text::Morse; NO because it doesn't handle prosigns
 use Text::Levenshtein qw(distance);
 use Term::ReadKey;
 
@@ -24,8 +23,6 @@ my @choicekeys = qw/a s d f j k l ;/;
 my %choicekeys = map {$choicekeys[$_]=>$_} (0..$#choicekeys);
 
 
-#my $morse = new Text::Morse;
-
 my %thecode = qw{
 	A .-	B -...	C -.-.	D -..	E .	F ..-.	G --.	H ....
 	I ..	J .---	K -.-	L .-..	M --	N -.	O ---	P .--.
@@ -33,9 +30,9 @@ my %thecode = qw{
 	Y -.--	Z --..	0 -----	1 .----	2 ..---	3 ...--	4 ....-	5 .....
 	6 -....	7 --...	8 ---..	9 ----.	@ .--.-.	! ---. - -....-
 	, --..--	. .-.-.- / -..-.	? ..--..	( -.--.-	"  .-..-.
-	' .----.	[AS] .-...	[BT] -...-	[AR] .-.-.	[SK] ...-.-
-	[BK] -...-.-	[KN] -.--.	[KA] -.-.-	[CL] -.-..-..	[SN] ...-.
-	; -.-.-.
+	' .----.	[wait] .-...	[pause] -...-	[end] .-.-.	[final] ...-.-
+	[break] -...-.-	[nobrkr] -.--.	[attn] -.-.-	[clear] -.-..-..	
+	[verify] ...-.	; -.-.-. [error] ........
 };
 
 
@@ -49,7 +46,7 @@ my @calls_i_know = qw{
 	MM0INE
 };
 
-my @prosigns = grep '<', keys %thecode;
+my @prosigns = grep /^\[/, keys %thecode;
 
 my @qcodes = qw/
 	QRL	QRL?	QRV QRV?	QTH QTH?	QRT QRT?	QRM QRM?
@@ -74,6 +71,7 @@ sub encode {
 	my @codes = ();
 	foreach my $word(@words){
 		if($word =~ /^\[.*\]$/){
+			$word = lc $word;
 			# it's a prosign... look up the whole thing
 			die "prosign '$word' not defined"
 				unless exists $thecode{$word};
@@ -99,7 +97,6 @@ sub cw {
 
 sub hint {
 	return unless $hints;
-	#print scalar($morse->Encode($_[0])),"\n";
 	print encode($_[0]),"\n";
 }
 
@@ -112,6 +109,11 @@ cw('qrv', $wpm, $freq);
 
 my @data = <DATA>;
 chomp(@data);
+
+# add stuff??
+#push @data, @prosigns;
+
+
 my $longest = 0;
 foreach(@data){
 	$longest = length($_) if length($_) > $longest;
@@ -138,8 +140,6 @@ foreach my $text1(@data){
 		$sims{$text2} = $sim;
 	}
 	my @sims = (sort {$sims{$a} <=> $sims{$b}} keys %sims)[0..$maxchoiceindex];
-	#print "===\n$text1\n";
-	#print map {$_."\t".$codes{$_}."\n"} @sims;
 	$nearest{$text1} = [@sims];
 
 }
@@ -194,4 +194,3 @@ C
 /
 M6OGI
 MM0JTX
-[BK]
