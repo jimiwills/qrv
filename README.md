@@ -1,6 +1,6 @@
 # qrv
 
-![alt text](https://github.com/jimiwills/qrv/blob/master/qrv.png?raw=true)
+![QRV edited screenshot](https://github.com/jimiwills/qrv/raw/main/qrv.png)
 
 Get ready (enough) for CW.
 
@@ -187,7 +187,7 @@ for me to get on the air as soon as practicable, never mind the buzzcocks.
 ## Licence
 
 GNU GPL v3 - see 
-[LICENCE](https://github.com/[username]/[reponame]/blob/[branch]/LICENCE?raw=true)
+[LICENCE](https://github.com/jimiwills/qrv/raw/main/LICENSE)
 
 ## Author/contact
 
