@@ -1,5 +1,7 @@
 # qrv
 
+![alt text](https://github.com/jimiwills/qrv/blob/master/qrv.png?raw=true)
+
 Get ready (enough) for CW.
 
 ## project name
@@ -31,8 +33,8 @@ Forget the code.
 
 The majority of code on the air is made up of a very small vocabulary,
 with the exception of callsigns and serial numbers.  So why focus on 
-learning random 5-character strings, when you can learn a handful of 
-common words and get on the air quickly.
+learning random 5-character strings?  Learn a handful of 
+common words and get on the air quickly!
 
 About those callsigns?  Don't worry so much!  People usually give them
 more than once, and once you've figured it out, you know what to expect.
@@ -80,8 +82,8 @@ What helps with listening to the whole word at once?  Speed!
 
 I personally cannot listen to code at 25 wpm and not hear individual
 characters... so I need to speed it up.  Initial experimentation leads
-me to the conclusion that I can distinguish "QRL?" and "QRZ?".  Not 100%
-of the time, and not easily, but I can do it.
+me to the conclusion that I can distinguish "QRL?" and "QRZ?" at 40wpm.
+Not 100% of the time, and not easily, but I can do it.
 
 Spot the difference:
 
@@ -90,6 +92,13 @@ Spot the difference:
 
      --.- .-. --.. ..--..
 </pre>
+
+The difference is intentionally buried in the pattern so you have to 
+learn the difference listening to the whole thing, and not cheating
+by just listening to the last character.  
+
+I actually am no longer hearing the characters. It feels great. You should
+try it!
 
 I actually didn't know the code for ? (question mark) before playing with
 this idea, and I can tell you that learning the sound first is VERY
@@ -177,7 +186,8 @@ for me to get on the air as soon as practicable, never mind the buzzcocks.
 
 ## Licence
 
-GNU GPL v3 - see [LICENCE]
+GNU GPL v3 - see 
+[LICENCE](https://github.com/[username]/[reponame]/blob/[branch]/LICENCE?raw=true)
 
 ## Author/contact
 
@@ -186,4 +196,4 @@ Jimi MM0JTX
 Fully licenced amateur in UK
 and hacker for fun and profit
 
-[github.com/jimiwills]
+<github.com/jimiwills>

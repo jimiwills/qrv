@@ -70,8 +70,8 @@ foreach my $text1(@data){
 		$sims{$text2} = $sim;
 	}
 	my @sims = (sort {$sims{$a} <=> $sims{$b}} keys %sims)[0..$maxchoiceindex];
-	print "===\n$text1\n";
-	print map {$_."\t".$codes{$_}."\n"} @sims;
+	#print "===\n$text1\n";
+	#print map {$_."\t".$codes{$_}."\n"} @sims;
 	$nearest{$text1} = [@sims];
 
 }
