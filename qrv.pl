@@ -14,6 +14,11 @@ END{ReadMode(0);}
 
 my $cw = '~/unixcw-3.5.1/src/cw/cw';
 
+# level-up score thresdhold
+my $thresdhold = 18;
+my $oflast = 20;
+
+
 my $wpm = 40;
 my $freq = 700;
 my $choosebetween = 4;
@@ -49,6 +54,16 @@ my %thecode = qw{
 };
 
 
+my @prosigns = qw{
+
+	/ ? , . 
+	[error] [end] 	[final]	[pause]
+	[clear] [break] [nobrkr] [wait]
+	' ! ; (
+	" @ [attn] [verify]	
+};
+
+
 my @calls_i_know = qw{
 	MM0JTX
 	M6OGI
@@ -73,7 +88,6 @@ foreach my $i(0..9){
 	}
 }
 
-my @prosigns = grep /^\W/, keys %thecode;
 
 my @qcodes = qw/
 	QRL	QRL?	QRZ QRZ?	QRV QRV?	QTH QTH?	QRT QRT?
@@ -219,16 +233,52 @@ sub make_data_relations {
 }
 
 
-my $level = 3;
-my %nearest = make_data_relations(@data[0..$level]);
+#
+# $topindex = int(($level+2)/2) * 4 - 1
+#
+# level 1 is the first 4 words
+# level 1 (odd, bottom=0):
+# int((1+2)/2) * 4 - 1 = 3
+#
+# level 2 is 2nd 4 words
+# level 2 (even, bottom = top-3):
+# int((2+2)/2) * 4 - 1 = 7
+#
+# level 3 is first 8 words
+# level 3 (odd, bottom = 0):
+# int((3+2)/2) * 4 - 1 = 7
 
-my @last10 = ();
+# level 4 is 3rd 4 words
+# level 4 (even, bottom = top-3):
+# int((4+2)/2) * 4 - 1 = 11
+
+# level 5 is first 12 words
+# level 5 (odd, bottom = 0):
+# int((5+2)/2) * 4 - 1 = 11
+
+
+
+my $level = 1;
+my $topindex = int(($level+2)/2) * 4 - 1;
+my $bottomindex = $level % 2 ? 0 : $topindex-$choosebetween+1;
+my %nearest = make_data_relations(@data[$bottomindex..$topindex]);
+
+my @lastX = ();
 my $score = 0;
+
+
+
+print "Welcome to level $level: ";
+print 'new: {', 
+	join(', ', @data[$bottomindex..$topindex]),
+	"}\n";
+print "  (level: $level; score: $score)\n";
 
 while(1){
 	my $n = 1;
-	$level = @data if $level > @data;
-	my $seed = $data[int(rand()*($level+1))];
+	$level = @data if $level/2 > @data;
+	my @subset = @data[$bottomindex..$topindex];
+	my $seed = $subset[int(rand()*@subset)];
 	my @choices = sort {rand() <=> rand()} @{$nearest{$seed}};
 	my $play = int(rand()*$choosebetween);
 	hint($choices[$play]);
@@ -246,24 +296,37 @@ while(1){
 		my $correct = 0;
 		if($ans == $play){
 			$correct = 1;
-			print "Well done.  Another!";
+			print "Correct.";
 		}
 		else {
-			push @last10, 0;
+			push @lastX, 0;
 			print "Nope... it was: $choices[$play]\nTry another.";
 			sleep 1;
 		}
 		$score += $correct;
-		push @last10, $correct;
-		if(@last10 > 10){
-			$score -=  shift @last10;
+		push @lastX, $correct;
+		if(@lastX > $oflast){
+			$score -=  shift @lastX;
 		}
-		if($score >= 9){
-			print "\nscore >= 9, adding another...";
+		if($score >= $thresdhold){
+			#print "\nscore >= 9, adding another...";
 			$level++;
-			%nearest = make_data_relations(@data[0..$level]);
+			$topindex = int(($level+2)/2) * 4 - 1;
+			$bottomindex = $level % 2 ? 0 : $topindex-$choosebetween+1;
+			%nearest = make_data_relations(@data[$bottomindex..$topindex]);
+			#%nearest = make_data_relations(@data[0..$level]);
 			$score = 0;
-			@last10 = ();
+			@lastX = ();
+
+			print "Welcome to level $level: ";
+			if($bottomindex == 0){
+				print ($topindex+1)," items\n";
+			}
+			else {
+				print 'new: {', 
+					join(', ', @data[$bottomindex..$topindex]),
+					"}\n";
+			}
 		}
 
 		print "  (level: $level; score: $score)\n";
