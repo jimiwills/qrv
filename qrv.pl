@@ -28,7 +28,7 @@ my %thecode = qw{
 	I ..	J .---	K -.-	L .-..	M --	N -.	O ---	P .--.
 	Q --.-	R .-.	S ...	T -	U ..-	V ...-	W .--	X -..-
 	Y -.--	Z --..	0 -----	1 .----	2 ..---	3 ...--	4 ....-	5 .....
-	6 -....	7 --...	8 ---..	9 ----.	@ .--.-.	
+	6 -....	7 --...	8 ---..	9 ----.		
 
 	/ -..-.	? ..--..	, --..--	. .-.-.- 
 
@@ -42,6 +42,7 @@ my %thecode = qw{
 	; -.-.-. 
 	( -.--.-	"  .-..-.
 	
+	@ .--.-.
 				
 	[attn] -.-.-		
 	[verify] ...-.	
@@ -192,37 +193,42 @@ if(@data < $choosebetween){
 }
 
 
-### figure out the closest relatives of each text
-### so the user needs to work harder to distinguish them!
-#my %codes = map {$_ => $morse->Encode($_)} @data;
-my %codes = map {$_ => encode($_)} @data;
+sub make_data_relations {
+	my @data = @_; # not the same as the data from outside!
+	### figure out the closest relatives of each text
+	### so the user needs to work harder to distinguish them!
+	#my %codes = map {$_ => $morse->Encode($_)} @data;
+	my %codes = map {$_ => encode($_)} @data;
 
-my %nearest = ();
-my $maxchoiceindex = $choosebetween-1;
-foreach my $text1(@data){
-	print "calculating $text1\n";
-	my $code1 = $codes{$text1};
-	my %sims = ();
-	foreach my $text2(@data){
-		my $code2 = $codes{$text2};
-		my $sim = distance($code1, $code2);
-		$sims{$text2} = $sim;
+	my %nearest = ();
+	my $maxchoiceindex = $choosebetween-1;
+	foreach my $text1(@data){
+		#print "calculating $text1\n";
+		my $code1 = $codes{$text1};
+		my %sims = ();
+		foreach my $text2(@data){
+			my $code2 = $codes{$text2};
+			my $sim = distance($code1, $code2);
+			$sims{$text2} = $sim;
+		}
+		my @sims = (sort {$sims{$a} <=> $sims{$b}} keys %sims)[0..$maxchoiceindex];
+		$nearest{$text1} = [@sims];
+
 	}
-	my @sims = (sort {$sims{$a} <=> $sims{$b}} keys %sims)[0..$maxchoiceindex];
-	$nearest{$text1} = [@sims];
-
+	return %nearest;
 }
 
 
+my $level = 3;
+my %nearest = make_data_relations(@data[0..$level]);
 
 my @last10 = ();
 my $score = 0;
-my $level = 4;
 
 while(1){
 	my $n = 1;
 	$level = @data if $level > @data;
-	my $seed = $data[int(rand()*$level)];
+	my $seed = $data[int(rand()*($level+1))];
 	my @choices = sort {rand() <=> rand()} @{$nearest{$seed}};
 	my $play = int(rand()*$choosebetween);
 	hint($choices[$play]);
@@ -240,11 +246,11 @@ while(1){
 		my $correct = 0;
 		if($ans == $play){
 			$correct = 1;
-			print "Well done.  Another!\n";
+			print "Well done.  Another!";
 		}
 		else {
 			push @last10, 0;
-			print "Nope... it was: $choices[$play]\nTry another...\n\n";
+			print "Nope... it was: $choices[$play]\nTry another.";
 			sleep 1;
 		}
 		$score += $correct;
@@ -253,12 +259,14 @@ while(1){
 			$score -=  shift @last10;
 		}
 		if($score >= 9){
-			print "score >= 9, adding another...";
+			print "\nscore >= 9, adding another...";
 			$level++;
+			%nearest = make_data_relations(@data[0..$level]);
 			$score = 0;
 			@last10 = ();
 		}
 
+		print "  (level: $level; score: $score)\n";
 	}
 	else {
 		print "\nunrecognised key: $ans\ntry another...\n";
