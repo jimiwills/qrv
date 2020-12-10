@@ -28,11 +28,23 @@ my %thecode = qw{
 	I ..	J .---	K -.-	L .-..	M --	N -.	O ---	P .--.
 	Q --.-	R .-.	S ...	T -	U ..-	V ...-	W .--	X -..-
 	Y -.--	Z --..	0 -----	1 .----	2 ..---	3 ...--	4 ....-	5 .....
-	6 -....	7 --...	8 ---..	9 ----.	@ .--.-.	! ---. - -....-
-	, --..--	. .-.-.- / -..-.	? ..--..	( -.--.-	"  .-..-.
-	' .----.	[wait] .-...	[pause] -...-	[end] .-.-.	[final] ...-.-
-	[break] -...-.-	[nobrkr] -.--.	[attn] -.-.-	[clear] -.-..-..	
-	[verify] ...-.	; -.-.-. [error] ........
+	6 -....	7 --...	8 ---..	9 ----.	@ .--.-.	
+
+	/ -..-.	? ..--..	, --..--	. .-.-.- 
+
+[error] ........
+[end] .-.-.	[final] ...-.-	[pause] -...-
+[clear] -.-..-..  [break] -...-.-	[nobrkr] -.--.	
+[wait] .-...
+
+	' .----.	
+	! ---. - -....-
+	; -.-.-. 
+	( -.--.-	"  .-..-.
+	
+				
+	[attn] -.-.-		
+	[verify] ...-.	
 };
 
 
@@ -46,23 +58,50 @@ my @calls_i_know = qw{
 	MM0INE
 };
 
-my @prosigns = grep /^\[/, keys %thecode;
+my @numbers = (0..9);
+foreach my $i(0..9){
+	foreach my $j(0..9){
+		push @numbers, $i.$j;
+	}
+}
+foreach my $i(0..9){
+	foreach my $j(0..9){
+		foreach my $k(0..9){
+			push @numbers, $i.$j.$k;
+		}
+	}
+}
+
+my @prosigns = grep /^\W/, keys %thecode;
 
 my @qcodes = qw/
-	QRL	QRL?	QRV QRV?	QTH QTH?	QRT QRT?	QRM QRM?
-	QRN QRN?	QRO QRO?	QRP QRP?	QRQ QRQ?	QSL QSL?
-	QSO QSO?	QST	QRS QRS?	QRG QRG?	QRH QRH?
-	QRI QRI?	QRJ QRJ?	QRK QRK?	QRX QRX?	QRZ QRZ?
+	QRL	QRL?	QRZ QRZ?	QRV QRV?	QTH QTH?	QRT QRT?
+	QRM QRM?	QRN QRN?	QRO QRO?	QRP QRP?	QRQ QRQ?
+	QSL QSL?	QSO QSO?	QST	QRS QRS?	QRG QRG?	QRH QRH?
+	QRI QRI?	QRJ QRJ?	QRK QRK?	QRX QRX?	
 	QSA QSA?	QSB QSB?	QSP QSP?	QSV QSV?	QSX QSX?
 	QSZ QSZ?	QSR QSR?
 /;
 
 my @abbrs = qw/
-	abt adr agn ant b4 c cfm cul es fb ga gb ge gg gm gn gnd
-	hi hihi hr hv hw hw? lid msg n nil nr nw ob om op ot pse
-	pwr rig rpt rx rcvr sed sez sri tmw tnx tt tu tvi tx ur 
-	urs wkd wkg wl wud wx xcvr xmtr xyl yl 73
+	c cq   de dx   hw? hw   cpy? es   fb ga   gb ge   gm gn 
+	sri rpt   pse tnx   ur 73   ant gnd   tx rx 
+	rcvr xmtr    xcvr rig    pwr w
+	n	urs    wx
+	agn abt adr b4 cfm cul gg
+	hi hihi hr hv lid msg nil nr nw ob om op ot 
+	  sed sez tmw tt tu tvi  
+	wkd wkg wl wud   xyl yl 
 /;
+
+my @wordbank = (
+	\@qcodes,
+	\@prosigns,
+	\@abbrs,
+	\@calls_i_know,
+#	\@numbers,
+);
+
 
 
 sub encode {
@@ -107,8 +146,37 @@ sub quit {
 
 cw('qrv', $wpm, $freq);
 
-my @data = <DATA>;
+
+
+
+
+
+
+
+
+my @data = <DATA>; # if you want to start with something else?
 chomp(@data);
+
+
+#######################
+# add the lists, 4 at a time...
+
+while(1){
+	my $empties = 0;
+	foreach my $list(@wordbank){
+		my $c = 0;
+		while(@$list){
+			push @data, shift @$list;
+			$c++;
+			last if $c >= 4;
+		}
+		$empties++ if $c == 0;
+	}
+	last if $empties == @wordbank;
+}
+
+
+
 
 # add stuff??
 #push @data, @prosigns;
@@ -132,6 +200,7 @@ my %codes = map {$_ => encode($_)} @data;
 my %nearest = ();
 my $maxchoiceindex = $choosebetween-1;
 foreach my $text1(@data){
+	print "calculating $text1\n";
 	my $code1 = $codes{$text1};
 	my %sims = ();
 	foreach my $text2(@data){
@@ -145,9 +214,15 @@ foreach my $text1(@data){
 }
 
 
+
+my @last10 = ();
+my $score = 0;
+my $level = 4;
+
 while(1){
 	my $n = 1;
-	my $seed = $data[int(rand()*@data)];
+	$level = @data if $level > @data;
+	my $seed = $data[int(rand()*$level)];
 	my @choices = sort {rand() <=> rand()} @{$nearest{$seed}};
 	my $play = int(rand()*$choosebetween);
 	hint($choices[$play]);
@@ -162,13 +237,28 @@ while(1){
 
 	if(exists $choicekeys{$ans}){
 		$ans = $choicekeys{$ans};
+		my $correct = 0;
 		if($ans == $play){
+			$correct = 1;
 			print "Well done.  Another!\n";
 		}
 		else {
+			push @last10, 0;
 			print "Nope... it was: $choices[$play]\nTry another...\n\n";
 			sleep 1;
 		}
+		$score += $correct;
+		push @last10, $correct;
+		if(@last10 > 10){
+			$score -=  shift @last10;
+		}
+		if($score >= 9){
+			print "score >= 9, adding another...";
+			$level++;
+			$score = 0;
+			@last10 = ();
+		}
+
 	}
 	else {
 		print "\nunrecognised key: $ans\ntry another...\n";
@@ -182,15 +272,3 @@ while(1){
 =cut
 
 __DATA__
-QRL?
-QRZ?
-QRL
-QRZ
-CQ
-DE
-ES
-?
-C
-/
-M6OGI
-MM0JTX
