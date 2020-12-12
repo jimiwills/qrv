@@ -14,6 +14,11 @@ END{ReadMode(0);}
 
 my $cw = '~/unixcw-3.5.1/src/cw/cw';
 
+my $level = 10;
+my $hints = 0;
+
+
+
 # level-up score thresdhold
 my $thresdhold = 18;
 my $oflast = 20;
@@ -22,7 +27,6 @@ my $oflast = 20;
 my $wpm = 40;
 my $freq = 700;
 my $choosebetween = 4;
-my $hints = 0;
 
 my @choicekeys = qw/a s d f j k l ;/;
 my %choicekeys = map {$choicekeys[$_]=>$_} (0..$#choicekeys);
@@ -37,10 +41,10 @@ my %thecode = qw{
 
 	/ -..-.	? ..--..	, --..--	. .-.-.- 
 
-[error] ........
-[end] .-.-.	[final] ...-.-	[pause] -...-
-[clear] -.-..-..  [break] -...-.-	[nobrkr] -.--.	
-[wait] .-...
+[hh] ........
+[ar] .-.-.	[sk] ...-.-	[bt] -...-
+[cl] -.-..-..  [bk] -...-.-	[kn] -.--.	
+[as] .-...
 
 	' .----.	
 	! ---. - -....-
@@ -49,18 +53,18 @@ my %thecode = qw{
 	
 	@ .--.-.
 				
-	[attn] -.-.-		
-	[verify] ...-.	
+	[ka] -.-.-		
+	[ve] ...-.	
 };
 
 
 my @prosigns = qw{
 
 	/ ? , . 
-	[error] [end] 	[final]	[pause]
-	[clear] [break] [nobrkr] [wait]
+	[HH] [AR] 	[SK]	[BT]
+	[CL] [BK] [KN] [AS]
 	' ! ; (
-	" @ [attn] [verify]	
+	" @ [KA] [VE]	
 };
 
 
@@ -258,7 +262,6 @@ sub make_data_relations {
 
 
 
-my $level = 1;
 my $topindex = int(($level+2)/2) * 4 - 1;
 my $bottomindex = $level % 2 ? 0 : $topindex-$choosebetween+1;
 my %nearest = make_data_relations(@data[$bottomindex..$topindex]);
