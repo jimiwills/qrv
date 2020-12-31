@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8">
+<title>beep?</title>
+<script>
+var a,p;
+var wpm = 16;
+var standard_unit_ms = 1200/wpm;
+var ditdahcut = 2 * standard_unit_ms
+var dahwordcut = 5 * standard_unit_ms
+window.onload = ()=>{
+	var k = document.getElementById("keyer")
+	k.addEventListener("keydown",()=>{reg(-1)})
+	k.addEventListener("keyup",()=>{reg(1)})
+
+
+	a = document.getElementById("myAudio")
+	p = document.getElementById("words")
+	//document.getElementById("myAudio").volume = 0.2;
+	//document.getElementById("myAudio").playbackRate = 0.7;
+}
+
+var last = Date.now()
+var code = {
+	'a': '.-', // etc
+	'b': '-...',
+	'c': '-.-.',
+	'd': '-..',
+	'e': '.',
+	'f': '..-.',
+	'g': '--.',
+	'h': '....',
+	'i': '..',
+	'j': '.---',
+	'k': '-.-',
+	'l': '.-..',
+	'm': '--',
+	'n': '-.',
+	'o': '---',
+	'p': '.--.',
+	'q': '--.-',
+	'r': '.-.',
+	's': '...',
+	't': '-',
+	'u': '..-',
+	'v': '...-',
+	'w': '.--',
+	'x': '-..-',
+	'y': '-.--',
+	'z': '--..',
+	'.': '.-.-.-',
+	',': '--..--',
+	'/': '-..-.',
+	'?': '..--..',
+	'0': '-----',
+	'1': '.----',
+	'2': '..---',
+	'3': '...--',
+	'4': '....-',
+	'5': '.....',
+	'6': '-....',
+	'7': '--...',
+	'8': '---..',
+	'9': '----.'
+}
+var rcode = {'_':"0"}
+for(k in code){
+	rcode[code[k]] = k
+}
+var words = ''
+var dits = ''
+var character = ''
+reg = (x)=>{ // keydown gives negative, indicating the duration noted is a gap.  a positive is a signal
+	x<0 ? a.play() : a.pause()
+	var now = Date.now()
+	var dur = now - last
+	var units = 1
+	if(dur > dahwordcut){
+		units = 7
+	}
+	else if(dur > ditdahcut){
+		units = 3
+	}
+	units *= x
+	var newdits = ""
+	if(units==1){
+		newdits = "."
+	}
+	else if(units==3){
+		newdits = "-"
+	}
+	else if(units==7){
+		newdits = "_"
+	}
+	else if(units==-3){
+		if(character.length > 1){
+			character += "]"
+		}
+		words+=character
+		character=""
+		dits = ""
+	}
+	else if(units==-7){
+		words+=character+" "
+		character=""
+		dits = ""
+	}
+
+	if(units>0){
+		dits+=newdits
+
+		if(rcode.hasOwnProperty(dits))
+			character = rcode[dits]
+		else
+			character = '?'
+		/*
+		if(rcode.hasOwnProperty(dits+newdits)){
+			dits+=newdits
+			if(character.length>1)
+				character += rcode[dits]
+			else
+				character = rcode[dits]
+		}
+		else {
+			if(character.length > 1)
+				character += rcode[dits]
+			else
+				character = "["+rcode[dits]
+			dits = newdits
+		}*/
+	}
+
+	p.innerHTML=words+character+" // "+dits+" "+units+" "+dur
+
+
+	last = now
+}
+
+text2cw = (text)=>{
+	var words = text.split(/\s+/)
+	var cw = ""
+	for(var i in words){
+		for(var j=0; j<words[i].length; j++){
+			var c = words[i][j]
+			if(code.hasOwnProperty(c)){
+				cw += code[c] + " "
+			}
+			else {
+				console.log("Skipping character: "+c )
+			}
+		}
+		cw += '/'
+	}
+	return cw;
+}
+
+encodecw = (cw) => {
+	var times = []
+	for(var i=0; i<cw.length; i++){
+		var c = cw[i]
+		if(c == "."){
+			times.push(1)
+			times.push(-1)
+		}
+		else if(c == "-"){
+			times.push(3)
+			times.push(-1)
+		}
+		else if(c == " "){
+			times[times.length-1] -= 2
+		}
+		else if(c == "/"){
+			times[times.length-1] -= 4
+		}
+	}
+	return times
+}
+
+send = (times)=>{
+	var time = times.shift()
+	if(time>0)
+		a.play()
+	else
+		a.pause()
+	setTimeout(()=>{send(times)},Math.abs(time)*standard_unit_ms)
+}
+
+send_text_as_cw = (text)=>{
+	send(encodecw(text2cw(text)))
+}
+
+</script>
+<body>
+	<input id="keyer" type="text">
+
+ <audio id="myAudio" loop>
+  <source src="700hz.wav" type="audio/wav">
+  Your browser does not support the audio element.
+</audio> 
+<p id="words"></p>
+</body>
+</html>
